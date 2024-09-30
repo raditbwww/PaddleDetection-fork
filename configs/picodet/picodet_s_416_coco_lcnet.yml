@@ -6,11 +6,11 @@ _BASE_: [
   '_base_/picodet_416_reader.yml',
 ]
 
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/legendary_models/PPLCNet_x0_75_pretrained.pdparams
+pretrain_weights: https://paddledet.bj.bcebos.com/models/picodet_s_416_coco_lcnet.pdparams
 weights: output/picodet_s_416_coco/best_model
 find_unused_parameters: True
 use_ema: true
-epoch: 300
+epoch: 70
 snapshot_epoch: 10
 
 LCNet:
