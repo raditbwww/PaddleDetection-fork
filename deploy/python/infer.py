@@ -377,6 +377,7 @@ class Detector(object):
         self.det_times.postprocess_time_s.end()
 
         results.append(result)
+        print(results)
         results = self.merge_batch_result(results)
         return results
 
