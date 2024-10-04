@@ -129,7 +129,7 @@ class Detector(object):
     def set_config(self, model_dir, use_fd_format):
         return PredictConfig(model_dir, use_fd_format=use_fd_format)
 
-    def preprocess(self, image_list):
+    def preprocess(self, im):
         preprocess_ops = []
         for op_info in self.pred_config.preprocess_infos:
             new_op_info = op_info.copy()
@@ -138,11 +138,9 @@ class Detector(object):
 
         input_im_lst = []
         input_im_info_lst = []
-        print(preprocess_ops)
-        for im_path in image_list:
-            im, im_info = preprocess(im_path, preprocess_ops)
-            input_im_lst.append(im)
-            input_im_info_lst.append(im_info)
+        im, im_info = preprocess(im, preprocess_ops)
+        input_im_lst.append(im)
+        input_im_info_lst.append(im_info)
         inputs = create_inputs(input_im_lst, input_im_info_lst)
         input_names = self.predictor.get_input_names()
         for i in range(len(input_names)):
@@ -361,73 +359,26 @@ class Detector(object):
         return results
 
     def predict_image(self,
-                      image_list,
-                      run_benchmark=False,
-                      repeats=1,
-                      visual=True,
-                      save_results=False):
-        batch_loop_cnt = math.ceil(float(len(image_list)) / self.batch_size)
+                      im):
         results = []
-        for i in range(batch_loop_cnt):
-            start_index = i * self.batch_size
-            end_index = min((i + 1) * self.batch_size, len(image_list))
-            batch_image_list = image_list[start_index:end_index]
-            if run_benchmark:
-                # preprocess
-                inputs = self.preprocess(batch_image_list)  # warmup
-                self.det_times.preprocess_time_s.start()
-                inputs = self.preprocess(batch_image_list)
-                self.det_times.preprocess_time_s.end()
+        # preprocess
+        self.det_times.preprocess_time_s.start()
+        inputs = self.preprocess(im)
+        self.det_times.preprocess_time_s.end()
 
-                # model prediction
-                result = self.predict(repeats=50, run_benchmark=True)  # warmup
-                self.det_times.inference_time_s.start()
-                result = self.predict(repeats=repeats, run_benchmark=True)
-                self.det_times.inference_time_s.end(repeats=repeats)
+        # model prediction
+        self.det_times.inference_time_s.start()
+        result = self.predict()
+        self.det_times.inference_time_s.end()
 
-                # postprocess
-                result_warmup = self.postprocess(inputs, result)  # warmup
-                self.det_times.postprocess_time_s.start()
-                result = self.postprocess(inputs, result)
-                self.det_times.postprocess_time_s.end()
-                self.det_times.img_num += len(batch_image_list)
+        # postprocess
+        self.det_times.postprocess_time_s.start()
+        result = self.postprocess(inputs, result)
+        self.det_times.postprocess_time_s.end()
+        self.det_times.img_num += len(batch_image_list)
 
-                cm, gm, gu = get_current_memory_mb()
-                self.cpu_mem += cm
-                self.gpu_mem += gm
-                self.gpu_util += gu
-            else:
-                # preprocess
-                self.det_times.preprocess_time_s.start()
-                inputs = self.preprocess(batch_image_list)
-                self.det_times.preprocess_time_s.end()
-
-                # model prediction
-                self.det_times.inference_time_s.start()
-                result = self.predict()
-                self.det_times.inference_time_s.end()
-
-                # postprocess
-                self.det_times.postprocess_time_s.start()
-                result = self.postprocess(inputs, result)
-                self.det_times.postprocess_time_s.end()
-                self.det_times.img_num += len(batch_image_list)
-
-                if visual:
-                    visualize(
-                        batch_image_list,
-                        result,
-                        self.pred_config.labels,
-                        output_dir=self.output_dir,
-                        threshold=self.threshold)
-            results.append(result)
-            print('Test iter {}'.format(i))
+        results.append(result)
         results = self.merge_batch_result(results)
-        print(results)
-        if save_results:
-            Path(self.output_dir).mkdir(exist_ok=True)
-            self.save_coco_results(
-                image_list, results, use_coco_category=FLAGS.use_coco_category)
         return results
 
     def predict_video(self, video_file, camera_id):
