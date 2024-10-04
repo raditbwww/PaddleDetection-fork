@@ -375,7 +375,6 @@ class Detector(object):
         self.det_times.postprocess_time_s.start()
         result = self.postprocess(inputs, result)
         self.det_times.postprocess_time_s.end()
-        self.det_times.img_num += len(batch_image_list)
 
         results.append(result)
         results = self.merge_batch_result(results)
