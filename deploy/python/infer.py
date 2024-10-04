@@ -138,6 +138,7 @@ class Detector(object):
 
         input_im_lst = []
         input_im_info_lst = []
+        print(preprocess_ops)
         for im_path in image_list:
             im, im_info = preprocess(im_path, preprocess_ops)
             input_im_lst.append(im)
