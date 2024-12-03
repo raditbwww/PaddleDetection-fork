@@ -6,11 +6,11 @@ _BASE_: [
   '_base_/picodet_640_reader.yml',
 ]
 
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/dygraph/legendary_models/PPLCNet_x2_0_pretrained.pdparams
-weights: output/picodet_l_320_coco/best_model
+pretrain_weights: https://paddledet.bj.bcebos.com/models/picodet_m_416_coco_lcnet.pdparams
+weights: output/picodet_l_640_coco/best_model
 find_unused_parameters: True
 use_ema: true
-epoch: 200
+epoch: 250
 snapshot_epoch: 10
 
 LCNet:
@@ -42,4 +42,4 @@ LearningRate:
     steps: 300
 
 TrainReader:
-  batch_size: 12
+  batch_size: 16
