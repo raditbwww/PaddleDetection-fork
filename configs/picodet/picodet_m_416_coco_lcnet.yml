@@ -6,6 +6,7 @@ _BASE_: [
   '_base_/picodet_416_reader.yml',
 ]
 
+pretrain_weights: https://paddledet.bj.bcebos.com/models/picodet_m_416_coco_lcnet.pdparams
 weights: output/picodet_m_416_coco/best_model
 find_unused_parameters: True
 use_ema: true
